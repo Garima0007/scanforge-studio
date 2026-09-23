@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QRForge Pro – Advanced QR & Barcode Studio</title>
+  <meta name="description" content="Professional QR code generator with advanced customization, live scanner, AES encryption, bulk export, and analytics dashboard."/>
+  <meta name="theme-color" content="#0b1020"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <link rel="manifest" href="manifest.webmanifest"/>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="css/main.css"/>
+  <link rel="stylesheet" href="css/components.css"/>
+  <link rel="stylesheet" href="css/animations.css"/>
+
+  <!-- QRCode.js Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+
+<!-- ── Animated Background ── -->
+<canvas id="bg-canvas"></canvas>
+<div id="progress-bar"></div>
+<canvas id="confetti-canvas"></canvas>
+
+<!-- ============================================================
+     TOAST NOTIFICATION
+     ============================================================ -->
+<div id="toast">
+  <div id="toast-icon-el" class="toast-icon info">✅</div>
+  <span id="toast-msg">Done!</span>
+  <span class="toast-close" onclick="this.closest('#toast').classList.remove('show')">✕</span>
+  <div id="toast-progress" class="toast-progress"></div>
+</div>
+
+<!-- ============================================================
+     LANDING PAGE
+     ============================================================ -->
+<div id="landing-page">
+  <div class="lp-orb lp-orb-1"></div>
+  <div class="lp-orb lp-orb-2"></div>
+  <div class="lp-orb lp-orb-3"></div>
+
+  <!-- Nav -->
+  <nav class="lp-nav">
+    <div class="lp-nav-logo">
+      <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="32" height="32" rx="8" fill="url(#lg1)"/>
+        <rect x="6" y="6" width="8" height="8" rx="1.5" fill="white" opacity="0.9"/>
+        <rect x="18" y="6" width="8" height="8" rx="1.5" fill="white" opacity="0.9"/>
+        <rect x="6" y="18" width="8" height="8" rx="1.5" fill="white" opacity="0.9"/>
+        <rect x="18" y="18" width="3.5" height="3.5" rx="0.8" fill="white" opacity="0.7"/>
+        <rect x="22.5" y="18" width="3.5" height="3.5" rx="0.8" fill="white" opacity="0.7"/>
+        <rect x="18" y="22.5" width="3.5" height="3.5" rx="0.8" fill="white" opacity="0.7"/>
+        <rect x="22.5" y="22.5" width="3.5" height="3.5" rx="0.8" fill="white" opacity="0.7"/>
+        <defs>
+          <linearGradient id="lg1" x1="0" y1="0" x2="32" y2="32">
+            <stop stop-color="#6c63ff"/>
+            <stop offset="1" stop-color="#2dd4bf"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      QRForge Pro
+    </div>
+    <ul class="lp-nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#types">QR Types</a></li>
+      <li><a href="#stats">Stats</a></li>
+    </ul>
+    <div class="lp-nav-cta">
+      <button class="btn btn-outline btn-sm" onclick="App.openAuth(); App.switchAuthMode('login')">Log In</button>
+      <button class="btn btn-primary btn-sm" onclick="App.launchStudio()">⚡ Open Studio</button>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-badge animate-fadeDown delay-1">
+      <span class="hero-badge-dot"></span>
+      Professional QR & Barcode Studio
+    </div>
+    <h1 class="hero-title animate-fadeUp delay-2">
+      Create <span class="grad">Stunning</span> QR Codes<br/>in Seconds
+    </h1>
+    <p class="hero-sub animate-fadeUp delay-3">
+      The most advanced QR studio on the web. Custom shapes, gradients, logos, live scanner, AES encryption, bulk export & real-time analytics — all in your browser.
+    </p>
+    <div class="hero-actions animate-fadeUp delay-4">
+      <button class="btn btn-primary btn-xl" onclick="App.launchStudio()">
+        ⚡ Open Studio Now (Free & Instant)
+      </button>
+      <button class="btn btn-outline btn-xl" onclick="App.openAuth(); App.switchAuthMode('login')">
+        🔑 Log In / Sign Up
+      </button>
+    </div>
+
+    <!-- Hero QR Demo Preview -->
+    <div class="animate-scaleIn delay-5" style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;max-width:700px">
+      <div style="width:120px;height:120px;background:white;border-radius:16px;box-shadow:0 20px 60px rgba(108,99,255,0.25);display:flex;align-items:center;justify-content:center;font-size:3rem" class="hover-lift">🌐</div>
+      <div style="width:120px;height:120px;background:white;border-radius:16px;box-shadow:0 20px 60px rgba(45,212,191,0.2);display:flex;align-items:center;justify-content:center;font-size:3rem" class="hover-lift">💳</div>
+      <div style="width:120px;height:120px;background:white;border-radius:16px;box-shadow:0 20px 60px rgba(244,114,182,0.2);display:flex;align-items:center;justify-content:center;font-size:3rem" class="hover-lift">📶</div>
+      <div style="width:120px;height:120px;background:white;border-radius:16px;box-shadow:0 20px 60px rgba(251,191,36,0.2);display:flex;align-items:center;justify-content:center;font-size:3rem" class="hover-lift">👤</div>
+      <div style="width:120px;height:120px;background:white;border-radius:16px;box-shadow:0 20px 60px rgba(74,222,128,0.2);display:flex;align-items:center;justify-content:center;font-size:3rem" class="hover-lift">📍</div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section id="stats" class="stats-row">
+    <div class="stat-card"><div class="num">16+</div><div class="lbl">QR & Barcode Types</div></div>
+    <div class="stat-card"><div class="num">8</div><div class="lbl">Designer Themes</div></div>
+    <div class="stat-card"><div class="num">AES-256</div><div class="lbl">Encryption</div></div>
+    <div class="stat-card"><div class="num">4K</div><div class="lbl">Export Quality</div></div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="features-section">
+    <div class="section-label">Why QRForge Pro</div>
+    <h2 class="section-title">Everything you need in one place</h2>
+    <p class="section-sub">Professional-grade tools that were previously only available in desktop software, now running entirely in your browser.</p>
+
+    <div class="features-grid">
+      <div class="feat-card hover-lift">
+        <div class="feat-icon purple">🎨</div>
+        <h4>Advanced Customizer</h4>
+        <p>Choose from 6 dot shapes, 3 eye styles, linear/radial gradients, custom logos, and 8 branded frame types.</p>
+      </div>
+      <div class="feat-card hover-lift">
+        <div class="feat-icon teal">📷</div>
+        <h4>Real-Time Live Scanner</h4>
+        <p>Decode QR codes instantly using your device camera. Supports front/back camera switching, torch, and image file scanning.</p>
+      </div>
+      <div class="feat-card hover-lift">
+        <div class="feat-icon pink">🔒</div>
+        <h4>AES-256 Encryption</h4>
+        <p>Password-protect your QR codes with military-grade AES-GCM encryption using the browser's native Web Crypto API.</p>
+      </div>
+      <div class="feat-card hover-lift">
+        <div class="feat-icon amber">📦</div>
+        <h4>Bulk Generator & ZIP Export</h4>
+        <p>Generate up to 200 QR codes from a CSV file or text list. Download all as a ZIP archive or printable A4 sheet.</p>
+      </div>
+      <div class="feat-card hover-lift">
+        <div class="feat-icon green">📊</div>
+        <h4>Analytics Dashboard</h4>
+        <p>Track scans, unique visitors, weekly trends, type breakdown, and top-performing QR codes.</p>
+      </div>
+      <div class="feat-card hover-lift">
+        <div class="feat-icon purple">⬇️</div>
+        <h4>Multi-Format Export</h4>
+        <p>Download your QR as PNG (1x, 2x, 4x), SVG vector, or WebP. Copy to clipboard in one click.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ============================================================
+     AUTH OVERLAY
+     ============================================================ -->
+<div id="auth-overlay" class="modal-overlay" style="display:none">
+  <div class="modal auth-modal">
+    <div class="modal-body">
+      <div class="auth-logo">
+        <div class="logo-icon">⚡</div>
+        <h3 style="margin-top:0.5rem">QRForge Pro</h3>
+        <p class="text-sm text-muted">Your QR data never leaves your device</p>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tab-group" style="margin-bottom:1.5rem">
+        <button class="tab-btn active" data-mode="login" onclick="App.switchAuthMode('login')">Log In</button>
+        <button class="tab-btn" data-mode="signup" onclick="App.switchAuthMode('signup')">Create Account</button>
+      </div>
+
+      <form id="auth-form" onsubmit="event.preventDefault(); App.submitAuth()">
+        <div class="form-group hidden" id="auth-name-group">
+          <label class="form-label">Full Name</label>
+          <input class="form-input" id="auth-name" placeholder="John Doe" autocomplete="name"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input class="form-input" id="auth-email" type="email" placeholder="you@example.com" autocomplete="email" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input class="form-input" id="auth-password" type="password" placeholder="Min 6 characters" autocomplete="current-password" required/>
+        </div>
+        <div id="auth-error" style="color:var(--red);font-size:0.82rem;margin-bottom:0.75rem;min-height:18px"></div>
+        <button type="submit" class="btn btn-primary w-full btn-lg" id="auth-submit-btn">Log In</button>
+      </form>
+
+      <div style="text-align:center;margin-top:1.5rem">
+        <button class="btn btn-ghost btn-sm" onclick="App.closeAuth()">← Back to Home</button>
+      </div>
+      <p class="text-xs text-muted" style="text-align:center;margin-top:1rem">
+        All data is stored locally in your browser. No server required.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MAIN APP
+     ============================================================ -->
+<div id="main-app" style="display:none;flex-direction:column;min-height:100vh">
+
+  <!-- App Navbar -->
+  <nav class="app-nav">
+    <div class="app-nav-logo">
+      <div class="logo-icon">⚡</div>
+      QRForge Pro
+    </div>
+
+    <div class="app-nav-tabs">
+      <button class="app-nav-tab active" data-page="generate">⚡ Generate</button>
+      <button class="app-nav-tab" data-page="scan">📷 Scanner</button>
+      <button class="app-nav-tab" data-page="bulk">📦 Bulk</button>
+      <button class="app-nav-tab" data-page="history">🗂️ History <span id="history-count" style="background:var(--accent);color:white;border-radius:99px;padding:1px 7px;font-size:0.7rem;margin-left:2px">0</span></button>
+      <button class="app-nav-tab" data-page="analytics">📊 Analytics</button>
+    </div>
+
+    <div class="app-nav-right">
+      <div class="dropdown">
+        <div class="user-avatar avatar" onclick="this.closest('.dropdown').querySelector('.dropdown-menu').classList.toggle('show')" style="cursor:pointer">
+          <img src="" alt="Avatar" onerror="this.style.display='none'"/>
+        </div>
+        <div class="dropdown-menu">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border)">
+            <div class="text-sm" style="font-weight:600" id="nav-user-name">User</div>
+            <div class="text-xs text-muted" id="nav-user-email"></div>
+          </div>
+          <div class="dropdown-item" onclick="App.showPage('history')">🗂️ My QR Codes</div>
+          <div class="dropdown-item" onclick="App.showPage('analytics')">📊 Analytics</div>
+          <div class="dropdown-divider"></div>
+          <div class="dropdown-item danger" onclick="App.logout()">🚪 Log Out</div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ============================================================
+       PAGE: GENERATE
+       ============================================================ -->
+  <div id="page-generate" class="app-page active">
+    <div class="generate-layout">
+
+      <!-- LEFT: Controls -->
+      <div style="display:flex;flex-direction:column;gap:1.5rem">
+
+        <!-- QR Type Selector -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">📋 Content Type <span class="badge">16 types</span></div>
+          </div>
+          <div class="panel-body">
+            <div id="type-grid" class="type-grid"></div>
+            <!-- Dynamic Form Area -->
+            <div id="form-area"></div>
+          </div>
+        </div>
+
+        <!-- Dynamic & Security Options -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">🔧 Advanced Options</div>
+          </div>
+          <div class="panel-body">
+
+            <!-- Dynamic QR -->
+            <div class="toggle-wrap">
+              <div class="toggle-info">
+                <div class="toggle-label">⚡ Dynamic QR Code</div>
+                <div class="toggle-desc">Change the destination URL anytime without reprinting</div>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="toggle-dynamic" onchange="QREngine.toggleDynamic(this.checked)"/>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div id="dynamic-url-box" class="hidden" style="margin-bottom:1rem">
+              <div class="copy-box">
+                <span>🔗</span>
+                <span class="copy-val" id="dynamic-short-url">Generating…</span>
+                <button class="btn btn-icon btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('dynamic-short-url').textContent).then(()=>App.toast('📋','Link copied!','success'))">📋</button>
+              </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <!-- Password Protection -->
+            <div class="toggle-wrap">
+              <div class="toggle-info">
+                <div class="toggle-label">🔒 AES-256 Password Protection</div>
+                <div class="toggle-desc">Military-grade encryption via Web Crypto API</div>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="toggle-password" onchange="document.getElementById('pw-panel').classList.toggle('hidden',!this.checked); if(!this.checked){QREngine.setPassword(null); document.getElementById('pw-input').value='';}"/>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div id="pw-panel" class="hidden" style="margin-bottom:0.5rem">
+              <div style="position:relative">
+                <input class="form-input" id="pw-input" type="password" placeholder="Enter password for QR…" oninput="QREngine.setPassword(this.value)"/>
+                <button onclick="const i=document.getElementById('pw-input'); i.type=i.type==='password'?'text':'password'" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text2);font-size:1.1rem">👁️</button>
+              </div>
+              <div class="pw-strength-wrap"><div class="pw-strength-bar" id="pw-strength-bar"></div></div>
+              <div class="input-hint" id="pw-ecc-hint" style="display:none;color:var(--amber)">⚠️ ECC auto-set to H for encrypted QRs</div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: Preview -->
+      <div class="preview-panel">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">🖼️ Live Preview</div>
+          </div>
+
+          <!-- QR Preview -->
+          <div class="qr-preview-container">
+            <div class="qr-canvas-wrap" id="qr-canvas-wrap">
+              <div id="qr-placeholder" class="qr-placeholder">
+                <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+                  <rect x="4" y="4" width="28" height="28" rx="3" stroke="currentColor" stroke-width="3" fill="none"/>
+                  <rect x="48" y="4" width="28" height="28" rx="3" stroke="currentColor" stroke-width="3" fill="none"/>
+                  <rect x="4" y="48" width="28" height="28" rx="3" stroke="currentColor" stroke-width="3" fill="none"/>
+                  <rect x="12" y="12" width="12" height="12" rx="1" fill="currentColor" opacity="0.5"/>
+                  <rect x="56" y="12" width="12" height="12" rx="1" fill="currentColor" opacity="0.5"/>
+                  <rect x="12" y="56" width="12" height="12" rx="1" fill="currentColor" opacity="0.5"/>
+                  <rect x="48" y="48" width="6" height="6" rx="1" fill="currentColor" opacity="0.3"/>
+                  <rect x="56" y="48" width="6" height="6" rx="1" fill="currentColor" opacity="0.3"/>
+                  <rect x="64" y="48" width="6" height="6" rx="1" fill="currentColor" opacity="0.3"/>
+                  <rect x="48" y="56" width="6" height="6" rx="1" fill="currentColor" opacity="0.3"/>
+                  <rect x="64" y="64" width="6" height="6" rx="1" fill="currentColor" opacity="0.3"/>
+                </svg>
+                <p>Select a type & fill in the form to preview your QR code</p>
+              </div>
+            </div>
+
+            <!-- Meta badges -->
+            <div class="qr-meta-row">
+              <span class="qr-meta-badge purple">⚡ <span id="preview-type-badge">URL</span></span>
+              <span class="qr-meta-badge teal">ECC <span id="preview-ecc-badge">M</span></span>
+              <span class="qr-meta-badge green">🖼️ <span id="preview-size-badge">280px</span></span>
+            </div>
+
+            <!-- Content Label -->
+            <div style="width:100%;font-family:var(--mono);font-size:0.75rem;color:var(--text3);text-align:center;word-break:break-all" id="qr-content-label">—</div>
+
+            <!-- Generate Button -->
+            <button class="btn btn-primary w-full btn-lg" id="gen-btn" onclick="QREngine.generate()">
+              ✨ Generate & Save QR Code
+            </button>
+
+            <!-- Download Grid -->
+            <div class="download-grid">
+              <button class="btn btn-outline btn-sm" onclick="QREngine.download('png', 1)" title="Standard PNG">⬇️ PNG 1x</button>
+              <button class="btn btn-outline btn-sm" onclick="QREngine.download('png', 2)" title="Retina PNG">⬇️ PNG 2x</button>
+              <button class="btn btn-outline btn-sm" onclick="QREngine.download('png', 4)" title="Print-ready 4K">⬇️ PNG 4x (Print)</button>
+              <button class="btn btn-outline btn-sm" onclick="QREngine.download('svg')" title="Vector SVG">⬇️ SVG Vector</button>
+              <button class="btn btn-outline btn-sm" onclick="QREngine.download('webp')" title="WebP export">⬇️ WebP</button>
+              <button class="btn btn-outline btn-sm" onclick="QREngine.download('jpeg')" title="JPEG export">⬇️ JPEG</button>
+              <button class="btn btn-outline btn-sm" onclick="QREngine.copyToClipboard()" title="Copy image">📋 Copy</button>
+              <button class="btn btn-outline btn-sm" onclick="QREngine.share()" title="Share">🔗 Share</button>
+            </div>
+          </div>
+
+          <!-- Customization Accordion -->
+          <div class="section-divider"></div>
+
+          <!-- Dot Style -->
+          <div class="accordion-section">
+            <button class="accordion-trigger" onclick="this.classList.toggle('open'); this.nextElementSibling.classList.toggle('open')">
+              🔵 Dot & Body Style
+              <span class="acc-icon">▾</span>
+            </button>
+            <div class="accordion-body">
+              <div class="accordion-inner">
+                <div class="dot-grid">
+                  <button class="dot-btn active" data-style="square" onclick="QREngine.setDotStyle('square'); document.querySelectorAll('.dot-btn').forEach(b=>b.classList.toggle('active',b.dataset.style==='square'))">
+                    <div class="dot-preview square"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+                    Square
+                  </button>
+                  <button class="dot-btn" data-style="dots" onclick="QREngine.setDotStyle('dots'); document.querySelectorAll('.dot-btn').forEach(b=>b.classList.toggle('active',b.dataset.style==='dots'))">
+                    <div class="dot-preview dots"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+                    Dots
+                  </button>
+                  <button class="dot-btn" data-style="rounded" onclick="QREngine.setDotStyle('rounded'); document.querySelectorAll('.dot-btn').forEach(b=>b.classList.toggle('active',b.dataset.style==='rounded'))">
+                    <div class="dot-preview rounded"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+                    Rounded
+                  </button>
+                  <button class="dot-btn" data-style="extra-rounded" onclick="QREngine.setDotStyle('extra-rounded'); document.querySelectorAll('.dot-btn').forEach(b=>b.classList.toggle('active',b.dataset.style==='extra-rounded'))">
+                    <div class="dot-preview extra"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+                    Extra Round
+                  </button>
+                  <button class="dot-btn" data-style="classy" onclick="QREngine.setDotStyle('classy'); document.querySelectorAll('.dot-btn').forEach(b=>b.classList.toggle('active',b.dataset.style==='classy'))">
+                    <div class="dot-preview classy"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+                    Classy
+                  </button>
+                  <button class="dot-btn" data-style="diamond" onclick="QREngine.setDotStyle('diamond'); document.querySelectorAll('.dot-btn').forEach(b=>b.classList.toggle('active',b.dataset.style==='diamond'))">
+                    <div class="dot-preview diamond"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+                    Diamond
+                  </button>
+                </div>
+
+                <!-- Eye Styles -->
+                <div class="mt-3 mb-1 text-xs text-muted" style="font-weight:700;text-transform:uppercase;letter-spacing:.05em">Corner Eye Style</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+                  <div>
+                    <div class="text-xs text-muted mb-1">Outer Frame</div>
+                    <div style="display:flex;gap:6px">
+                      <button class="ecc-btn active" data-eye-role="outer" data-eye-style="square" onclick="QREngine.setEye('outer','square')">□ Square</button>
+                      <button class="ecc-btn" data-eye-role="outer" data-eye-style="extra-rounded" onclick="QREngine.setEye('outer','extra-rounded')">⬜ Round</button>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="text-xs text-muted mb-1">Inner Ball</div>
+                    <div style="display:flex;gap:6px">
+                      <button class="ecc-btn active" data-eye-role="inner" data-eye-style="square" onclick="QREngine.setEye('inner','square')">■ Square</button>
+                      <button class="ecc-btn" data-eye-role="inner" data-eye-style="dot" onclick="QREngine.setEye('inner','dot')">● Dot</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Colors & Gradients -->
+          <div class="accordion-section">
+            <button class="accordion-trigger" onclick="this.classList.toggle('open'); this.nextElementSibling.classList.toggle('open')">
+              🎨 Colors & Gradients
+              <span class="acc-icon">▾</span>
+            </button>
+            <div class="accordion-body">
+              <div class="accordion-inner">
+                <div class="color-row">
+                  <div class="color-swatch-wrap">
+                    <div class="color-swatch-label">QR Color</div>
+                    <div class="color-picker-container">
+                      <input type="color" id="fg-color-input" value="#000000" oninput="QREngine.updateColors(); document.getElementById('fg-hex').value=this.value"/>
+                      <input class="color-hex-input" id="fg-hex" value="#000000" maxlength="7" oninput="if(this.value.startsWith('#')&&this.value.length===7){document.getElementById('fg-color-input').value=this.value;QREngine.updateColors()}"/>
+                    </div>
+                  </div>
+                  <div class="color-swatch-wrap">
+                    <div class="color-swatch-label">Background</div>
+                    <div class="color-picker-container">
+                      <input type="color" id="bg-color-input" value="#ffffff" oninput="QREngine.updateColors(); document.getElementById('bg-hex').value=this.value"/>
+                      <input class="color-hex-input" id="bg-hex" value="#ffffff" maxlength="7" oninput="if(this.value.startsWith('#')&&this.value.length===7){document.getElementById('bg-color-input').value=this.value;QREngine.updateColors()}"/>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Gradient Toggle -->
+                <div class="toggle-wrap" style="padding:12px 0 8px">
+                  <div class="toggle-info">
+                    <div class="toggle-label" style="font-size:0.85rem">Enable Gradient Fill</div>
+                  </div>
+                  <label class="toggle">
+                    <input type="checkbox" id="toggle-gradient" onchange="QREngine.toggleGradient(this.checked)"/>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+
+                <div id="gradient-controls" class="hidden">
+                  <div class="color-row mt-1">
+                    <div class="color-swatch-wrap">
+                      <div class="color-swatch-label">Start Color</div>
+                      <div class="color-picker-container">
+                        <input type="color" id="grad-color1" value="#6c63ff" oninput="QREngine.updateColors()"/>
+                        <span class="color-hex-input" style="color:var(--text3)">Start</span>
+                      </div>
+                    </div>
+                    <div class="color-swatch-wrap">
+                      <div class="color-swatch-label">End Color</div>
+                      <div class="color-picker-container">
+                        <input type="color" id="grad-color2" value="#2dd4bf" oninput="QREngine.updateColors()"/>
+                        <span class="color-hex-input" style="color:var(--text3)">End</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-group mt-2">
+                    <label class="form-label">Gradient Type</label>
+                    <select class="form-input form-select" onchange="QREngine.state.gradType=this.value; QREngine.livePreview()">
+                      <option value="linear">Linear</option>
+                      <option value="radial">Radial</option>
+                    </select>
+                  </div>
+                  <div class="slider-wrap mt-2">
+                    <label>Angle</label>
+                    <input type="range" min="0" max="360" value="135" oninput="QREngine.setGradAngle(this.value)"/>
+                    <span class="val" id="grad-angle-val">135°</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Logo & Icon -->
+          <div class="accordion-section">
+            <button class="accordion-trigger" onclick="this.classList.toggle('open'); this.nextElementSibling.classList.toggle('open')">
+              🖼️ Logo & Icon
+              <span class="acc-icon">▾</span>
+            </button>
+            <div class="accordion-body">
+              <div class="accordion-inner">
+                <div class="logo-upload-area" onclick="document.getElementById('logo-upload-input').click()">
+                  <span style="font-size:1.8rem">📤</span>
+                  <div class="text-sm" style="font-weight:600">Upload Custom Logo</div>
+                  <div class="text-xs text-muted">PNG, JPG, SVG — Max 2MB</div>
+                  <input type="file" id="logo-upload-input" style="display:none" accept="image/*" onchange="QREngine.handleLogoUpload(this)"/>
+                </div>
+
+                <div id="logo-preview-wrap" class="hidden mt-2" style="display:flex;align-items:center;gap:10px;padding:10px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:var(--r-sm)">
+                  <img id="logo-preview-img" style="width:40px;height:40px;object-fit:contain;border-radius:6px;background:white" alt="Logo preview"/>
+                  <span class="text-sm" style="flex:1;color:var(--green)">✅ Logo loaded</span>
+                  <button class="btn btn-icon btn-sm" onclick="QREngine.clearLogo()" style="color:var(--red)">✕</button>
+                </div>
+
+                <div class="mt-3 mb-1 text-xs text-muted" style="font-weight:700;text-transform:uppercase;letter-spacing:.05em">Or pick a built-in icon</div>
+                <div id="builtin-icon-grid" class="logo-icon-grid"></div>
+
+                <div class="mt-3 mb-2 text-xs text-muted" style="font-weight:700;text-transform:uppercase;letter-spacing:.05em">Logo Shape</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <button class="logo-style-btn active" data-logo-shape="rounded" onclick="QREngine.setLogoShape('rounded')">Rounded</button>
+                  <button class="logo-style-btn" data-logo-shape="circle" onclick="QREngine.setLogoShape('circle')">Circle</button>
+                  <button class="logo-style-btn" data-logo-shape="square" onclick="QREngine.setLogoShape('square')">Square</button>
+                </div>
+
+                <div class="slider-wrap mt-3">
+                  <label>Logo Size</label>
+                  <input type="range" min="10" max="35" value="22" oninput="QREngine.state.logoSize=this.value/100; QREngine.livePreview(); document.getElementById('logo-size-val').textContent=this.value+'%'"/>
+                  <span class="val" id="logo-size-val">22%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Frames -->
+          <div class="accordion-section">
+            <button class="accordion-trigger" onclick="this.classList.toggle('open'); this.nextElementSibling.classList.toggle('open')">
+              🖼️ CTA Frame
+              <span class="acc-icon">▾</span>
+            </button>
+            <div class="accordion-body">
+              <div class="accordion-inner">
+                <div id="frame-grid" class="frame-grid"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Designer Themes -->
+          <div class="accordion-section">
+            <button class="accordion-trigger" onclick="this.classList.toggle('open'); this.nextElementSibling.classList.toggle('open')">
+              🎭 Designer Themes
+              <span class="acc-icon">▾</span>
+            </button>
+            <div class="accordion-body">
+              <div class="accordion-inner">
+                <div id="preset-grid" class="preset-grid"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- QR Settings -->
+          <div class="accordion-section">
+            <button class="accordion-trigger" onclick="this.classList.toggle('open'); this.nextElementSibling.classList.toggle('open')">
+              ⚙️ QR Settings
+              <span class="acc-icon">▾</span>
+            </button>
+            <div class="accordion-body">
+              <div class="accordion-inner">
+                <div class="form-group">
+                  <label class="form-label">Error Correction Level</label>
+                  <div class="ecc-group">
+                    <button class="ecc-btn" id="ecc-l" data-ecc="L" onclick="QREngine.setECC('L')">L (7%)</button>
+                    <button class="ecc-btn active" id="ecc-m" data-ecc="M" onclick="QREngine.setECC('M')">M (15%)</button>
+                    <button class="ecc-btn" id="ecc-q" data-ecc="Q" onclick="QREngine.setECC('Q')">Q (25%)</button>
+                    <button class="ecc-btn" id="ecc-h" data-ecc="H" onclick="QREngine.setECC('H')">H (30%)</button>
+                  </div>
+                  <div class="input-hint">Higher ECC = more damage resistance & required for logos</div>
+                </div>
+                <div class="slider-wrap mt-2">
+                  <label>QR Size</label>
+                  <input type="range" min="120" max="400" value="280" oninput="QREngine.setSize(this.value)"/>
+                  <span class="val" id="size-val">280px</span>
+                </div>
+                <div class="slider-wrap mt-2">
+                  <label>Margin</label>
+                  <input type="range" min="0" max="40" value="16" oninput="QREngine.state.margin=parseInt(this.value); document.getElementById('margin-val').textContent=this.value+'px'; QREngine.livePreview()"/>
+                  <span class="val" id="margin-val">16px</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================================================
+       PAGE: SCANNER
+       ============================================================ -->
+  <div id="page-scan" class="app-page">
+    <div class="scanner-layout">
+
+      <!-- Left: Camera -->
+      <div style="display:flex;flex-direction:column;gap:1.5rem">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">📷 Live Camera Scanner</div>
+          </div>
+          <div class="panel-body">
+            <div class="scanner-viewport">
+              <div id="scanner-idle" style="text-align:center;color:var(--text3)">
+                <div style="font-size:4rem;margin-bottom:1rem">📷</div>
+                <div style="font-weight:600;color:var(--text2)">Camera not started</div>
+                <p class="text-sm" style="margin-top:0.5rem">Click "Start Camera" to scan QR codes in real time</p>
+              </div>
+              <video id="scanner-video" playsinline muted></video>
+              <div class="scanner-overlay" id="scanner-overlay" style="display:none">
+                <div class="scanner-hud">
+                  <div class="hud-corner hud-tl"></div>
+                  <div class="hud-corner hud-tr"></div>
+                  <div class="hud-corner hud-bl"></div>
+                  <div class="hud-corner hud-br"></div>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:0.75rem;margin-top:1rem;flex-wrap:wrap">
+              <button class="btn btn-primary" id="btn-start-cam" onclick="Scanner.startCamera()">📷 Start Camera</button>
+              <button class="btn btn-outline hidden" id="btn-stop-cam" onclick="Scanner.stopCamera()">⏹️ Stop</button>
+              <button class="btn btn-outline" onclick="Scanner.switchCamera()" title="Switch camera">🔄 Flip</button>
+              <button class="btn btn-outline" onclick="Scanner.toggleTorch()" title="Torch">🔦 Torch</button>
+            </div>
+
+            <!-- Image upload scan -->
+            <div class="section-divider"></div>
+            <div class="form-group">
+              <label class="form-label">Or scan from an image file</label>
+              <div class="file-drop" onclick="document.getElementById('scan-file-input').click()" style="padding:1.5rem">
+                <span style="font-size:2rem">🖼️</span>
+                <div class="text-sm" style="font-weight:600">Upload image to scan QR code</div>
+                <div class="text-xs text-muted">JPG, PNG, WebP, GIF</div>
+                <input type="file" id="scan-file-input" style="display:none" accept="image/*" onchange="Scanner.scanFromImage(this)"/>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Results & History -->
+      <div style="display:flex;flex-direction:column;gap:1.5rem">
+
+        <!-- Scan Result -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">✅ Scan Result</div>
+          </div>
+          <div class="panel-body">
+            <div id="scan-result-panel" class="hidden">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem">
+                <span class="badge badge-active">Decoded</span>
+                <span class="text-xs text-muted" id="scan-result-time"></span>
+              </div>
+              <div style="font-size:0.75rem;color:var(--accent2);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px" id="scan-result-type"></div>
+              <div style="background:rgba(0,0,0,0.2);border:1px solid var(--border2);border-radius:var(--r-sm);padding:12px;font-family:var(--mono);font-size:0.82rem;word-break:break-all;margin-bottom:1rem;max-height:120px;overflow-y:auto" id="scan-result-text"></div>
+              <div id="scan-result-actions" style="display:flex;gap:0.5rem;flex-wrap:wrap"></div>
+            </div>
+            <div id="scan-result-empty" style="text-align:center;padding:2rem;color:var(--text3)">
+              <div style="font-size:2.5rem;margin-bottom:0.75rem">🔍</div>
+              <p class="text-sm">Scan a QR code to see the result here</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scan History -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">📜 Recent Scans</div>
+            <button class="btn btn-ghost btn-sm" onclick="App.state.scanHistory=[]; App.persist('scanHistory'); Scanner._renderScanHistory(); Analytics.load(); App.toast('🗑️','Scan history cleared','info')">Clear</button>
+          </div>
+          <div class="panel-body" id="scan-history-list" style="max-height:400px;overflow-y:auto"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       PAGE: BULK GENERATOR
+       ============================================================ -->
+  <div id="page-bulk" class="app-page">
+    <div class="bulk-layout">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-bottom:2rem">
+
+        <!-- Input Panel -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">📝 Bulk Input <span class="badge" id="bulk-count">0</span> items</div>
+          </div>
+          <div class="panel-body">
+            <div class="tab-group">
+              <button class="tab-btn active" onclick="this.closest('.tab-group').querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('bulk-text-tab').classList.add('active');document.getElementById('bulk-csv-tab').classList.remove('active')">📝 Text / URLs</button>
+              <button class="tab-btn" onclick="this.closest('.tab-group').querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('bulk-csv-tab').classList.add('active');document.getElementById('bulk-text-tab').classList.remove('active')">📊 CSV File</button>
+            </div>
+
+            <div id="bulk-text-tab" class="tab-content active">
+              <div class="form-group">
+                <label class="form-label">One URL / text per line (max 200)</label>
+                <textarea class="form-input form-textarea" id="bulk-textarea" style="min-height:180px" placeholder="https://example.com&#10;https://github.com&#10;https://google.com"></textarea>
+              </div>
+              <button class="btn btn-outline w-full" onclick="Bulk.parseTextarea()">📥 Load Items</button>
+            </div>
+
+            <div id="bulk-csv-tab" class="tab-content">
+              <div class="file-drop mb-2" onclick="document.getElementById('bulk-csv-input').click()">
+                <span style="font-size:2rem">📊</span>
+                <div class="text-sm" style="font-weight:600">Upload CSV File</div>
+                <div class="text-xs text-muted">Columns: Label, Data (URL or text)</div>
+                <input type="file" id="bulk-csv-input" style="display:none" accept=".csv,.txt" onchange="Bulk.parseCSV(this)"/>
+              </div>
+              <div class="text-xs text-muted">CSV format: <code>Label,URL</code> (first row is header)</div>
+            </div>
+
+            <!-- Items preview list -->
+            <div class="section-divider"></div>
+            <div id="bulk-input-list" style="max-height:200px;overflow-y:auto"></div>
+
+            <!-- Settings row -->
+            <div class="section-divider"></div>
+            <div class="form-group mb-2">
+              <label class="form-label">Print Layout (for print sheet)</label>
+              <div class="form-row">
+                <div>
+                  <label class="form-label">Columns</label>
+                  <input class="form-input" id="print-cols" type="number" min="1" max="6" value="3"/>
+                </div>
+                <div>
+                  <label class="form-label">Rows per page</label>
+                  <input class="form-input" id="print-rows" type="number" min="1" max="10" value="4"/>
+                </div>
+              </div>
+            </div>
+
+            <button class="btn btn-primary w-full btn-lg mt-2" id="bulk-gen-btn" onclick="Bulk.generateAll()">✨ Generate All QR Codes</button>
+          </div>
+        </div>
+
+        <!-- Download Panel -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">⬇️ Export & Download</div>
+          </div>
+          <div class="panel-body">
+            <div id="bulk-download-bar" class="hidden" style="display:flex;flex-direction:column;gap:0.75rem">
+              <button class="btn btn-primary w-full" id="bulk-zip-btn" onclick="Bulk.downloadZip()">📦 Download All as ZIP</button>
+              <button class="btn btn-outline w-full" onclick="Bulk.printSheet()">🖨️ Generate Print Sheet (PDF)</button>
+            </div>
+            <div id="bulk-dl-empty" style="text-align:center;padding:2rem;color:var(--text3)">
+              <div style="font-size:2.5rem;margin-bottom:0.75rem">📦</div>
+              <p class="text-sm">Generate QR codes first to export them</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bulk Grid Preview -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">🖼️ Generated QR Codes</div>
+        </div>
+        <div class="panel-body">
+          <div id="bulk-grid" class="bulk-grid" style="display:none"></div>
+          <div id="bulk-grid-empty" style="text-align:center;padding:3rem;color:var(--text3)">
+            <div style="font-size:3rem;margin-bottom:1rem">📋</div>
+            <p>Your generated QR codes will appear here</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       PAGE: HISTORY
+       ============================================================ -->
+  <div id="page-history" class="app-page">
+    <div style="padding:2rem;max-width:1100px;margin:0 auto">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem">
+        <h2 style="font-family:var(--font-alt);font-weight:800">My QR Codes</h2>
+        <div style="display:flex;gap:0.75rem">
+          <div class="search-bar" style="width:280px">
+            <span>🔍</span>
+            <input type="text" placeholder="Search QR codes…" oninput="History.search(this.value)"/>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="History.clearAll()">🗑️ Clear All</button>
+        </div>
+      </div>
+
+      <div id="qr-history-list" class="qr-list"></div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       PAGE: ANALYTICS
+       ============================================================ -->
+  <div id="page-analytics" class="app-page">
+    <div class="analytics-layout">
+      <h2 style="font-family:var(--font-alt);font-weight:800">Analytics Dashboard</h2>
+
+      <!-- KPI Cards -->
+      <div class="stats-cards">
+        <div class="stat-kpi purple">
+          <div class="kpi-icon">📊</div>
+          <div class="kpi-num" id="kpi-total-scans">0</div>
+          <div class="kpi-label">Total Scans</div>
+          <div class="kpi-delta up">↑ Live tracking</div>
+        </div>
+        <div class="stat-kpi teal">
+          <div class="kpi-icon">⚡</div>
+          <div class="kpi-num" id="kpi-total-qrs">0</div>
+          <div class="kpi-label">QR Codes Created</div>
+        </div>
+        <div class="stat-kpi green">
+          <div class="kpi-icon">🔗</div>
+          <div class="kpi-num" id="kpi-dynamic">0</div>
+          <div class="kpi-label">Dynamic QRs</div>
+        </div>
+        <div class="stat-kpi amber">
+          <div class="kpi-icon">📈</div>
+          <div class="kpi-num" id="kpi-avg-scans">0</div>
+          <div class="kpi-label">Avg. Scans / QR</div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:1.5rem">
+
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">📈 Weekly Scan Activity</div>
+          </div>
+          <div class="panel-body">
+            <div id="weekly-chart" class="bar-chart"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">🥧 QR Type Breakdown</div>
+          </div>
+          <div class="panel-body" id="type-breakdown"></div>
+        </div>
+
+      </div>
+
+      <!-- Top QR Table -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">🏆 Top Performing QR Codes</div>
+        </div>
+        <div class="panel-body" style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:0.88rem">
+            <thead>
+              <tr style="border-bottom:1px solid var(--border)">
+                <th style="padding:10px 12px;text-align:left;color:var(--text3);font-weight:600">Name</th>
+                <th style="padding:10px 12px;text-align:left;color:var(--text3);font-weight:600">Type</th>
+                <th style="padding:10px 12px;text-align:left;color:var(--text3);font-weight:600">Mode</th>
+                <th style="padding:10px 12px;text-align:right;color:var(--text3);font-weight:600">Scans</th>
+                <th style="padding:10px 12px;text-align:right;color:var(--text3);font-weight:600">Created</th>
+              </tr>
+            </thead>
+            <tbody id="top-qr-table"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Recent Scans Summary -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">🕐 Recent Scans</div>
+        </div>
+        <div class="panel-body" id="recent-scans-list"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main-app -->
+
+<!-- ============================================================
+     FREE LOCAL AI ASSISTANT
+     ============================================================ -->
+<div id="ai-overlay" class="modal-overlay" style="display:none">
+  <div class="modal" style="max-width:620px">
+    <div class="modal-header">
+      <div>
+        <h4>✨ QRForge Assistant</h4>
+        <div class="text-xs text-muted" id="ai-greeting">Hello Creator! What would you like to create?</div>
+      </div>
+      <button class="btn btn-icon btn-sm" onclick="AIAssistant.close()" aria-label="Close assistant">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row" style="margin-bottom:1rem;flex-wrap:wrap">
+        <button class="btn btn-outline btn-sm" onclick="AIAssistant.explainQR()">Explain this QR</button>
+        <button class="btn btn-outline btn-sm" onclick="AIAssistant.explainFileShare()">Explain file sharing</button>
+        <button class="btn btn-outline btn-sm" onclick="AIAssistant.suggestDesign()">Suggest a design</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="ai-question">Ask about QRForge</label>
+        <textarea class="form-input form-textarea" id="ai-question" rows="3" placeholder="How do I make a QR code safer to scan?"></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="AIAssistant.ask()">Ask Assistant</button>
+      <div id="ai-answer" style="margin-top:1rem;padding:1rem;background:rgba(99,102,241,0.08);border:1px solid var(--border);border-radius:var(--r-sm);white-space:pre-wrap;line-height:1.6;min-height:76px">Choose an action or ask a question.</div>
+      <div class="section-divider"></div>
+      <div class="text-sm" style="font-weight:700;margin-bottom:0.5rem">Free image / DP tool</div>
+      <div class="text-xs text-muted" style="margin-bottom:0.75rem">Preview a local image and use it as your QR logo. Cloud image generation and web image search need an external provider.</div>
+      <input type="file" id="ai-image-input" accept="image/*" onchange="AIAssistant.previewImage(this)"/>
+      <img id="ai-image-preview" class="hidden" style="display:block;max-width:100%;max-height:160px;margin-top:0.75rem;border-radius:var(--r-sm);object-fit:contain" alt="Selected image preview"/>
+    </div>
+  </div>
+</div>
+
+<button class="ai-fab" onclick="AIAssistant.open()" aria-label="Open QRForge Assistant" title="Ask QRForge Assistant">
+  <span class="ai-fab-mark">✦</span>
+  <span class="ai-fab-pulse"></span>
+</button>
+
+<!-- ============================================================
+     PASSWORD GATE MODAL (for encrypted QR)
+     ============================================================ -->
+<div id="pw-gate-modal" class="modal-overlay" style="display:none">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <h4>🔒 Password Protected QR</h4>
+    </div>
+    <div class="modal-body">
+      <p class="text-sm" style="margin-bottom:1.25rem">This QR code is encrypted with AES-256. Enter the password to unlock its content.</p>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" id="pw-gate-input" type="password" placeholder="Enter unlock password…" onkeydown="if(event.key==='Enter')Scanner.unlockEncrypted()"/>
+      </div>
+      <div id="pw-gate-error" style="color:var(--red);font-size:0.82rem;min-height:18px;margin-bottom:0.75rem"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="document.getElementById('pw-gate-modal').classList.remove('show');document.getElementById('pw-gate-modal').style.display='none';document.getElementById('pw-gate-input').value='';document.getElementById('pw-gate-error').textContent=''">Cancel</button>
+      <button class="btn btn-primary" id="pw-gate-btn" onclick="Scanner.unlockEncrypted()">🔓 Unlock Content</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     JAVASCRIPT
+     ============================================================ -->
+<script src="js/templates.js?v=2"></script>
+<script src="js/presets.js"></script>
+<script src="js/crypto.js"></script>
+<script src="js/qr-engine.js"></script>
+<script src="js/scanner.js"></script>
+<script src="js/bulk.js"></script>
+<script src="js/ai-assistant.js?v=1"></script>
+<script src="js/app.js"></script>
+
+<script>
+  // ── Close dropdowns on outside click ──
+  document.addEventListener('click', e => {
+    document.querySelectorAll('.dropdown-menu.show').forEach(m => {
+      if (!m.closest('.dropdown').contains(e.target)) m.classList.remove('show');
+    });
+  });
+
+  // ── Update scan result UI visibility ──
+  const _origOnDecoded = Scanner._onDecoded.bind(Scanner);
+  Scanner._onDecoded = function(raw, type) {
+    document.getElementById('scan-result-empty')?.classList.add('hidden');
+    document.getElementById('scan-result-panel')?.classList.remove('hidden');
+    return _origOnDecoded(raw, type);
+  };
+
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+  }
+</script>
+</body>
+</html>

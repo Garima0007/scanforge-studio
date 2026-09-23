@@ -1,4 +1,4 @@
-# QRForge Pro - Advanced QR and Barcode Studio
+# ScanForge Studio - Smart QR Platform
 
 A browser-based QR and barcode platform built with **HTML5, CSS3, and modern JavaScript**, with an optional Node.js backend for persistent file sharing.
 

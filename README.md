@@ -1,6 +1,6 @@
-# QRForge Pro
+# ScanForge Studio (Smart QR Platform)
 
-QRForge Pro is a browser-based QR code and barcode studio for creating, customizing, scanning, securing, and exporting codes from one workspace.
+ScanForge Studio is a browser-based QR code and barcode platform for creating, customizing, scanning, securing, and exporting codes from one workspace.
 
 It combines a responsive frontend with an optional Node.js backend for file sharing, authentication, and persistent application data.
 

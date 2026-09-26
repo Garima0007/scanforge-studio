@@ -838,6 +838,10 @@ const QREngine = {
     const tb = document.getElementById('preview-type-badge');
     if (tb) tb.textContent = type?.label || 'QR';
 
+    if (id === 'file') {
+      setTimeout(() => QRTemplates.detectNetwork?.(), 20);
+    }
+
     this.livePreview(50);
   },
 

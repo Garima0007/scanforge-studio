@@ -16,6 +16,7 @@ const publicBaseUrl = String(process.env.PUBLIC_URL || '').replace(/\/$/, '');
 const maxFileSize = 500 * 1024 * 1024;
 const storageRoot = path.join(__dirname, 'storage');
 const uploadRoot = path.join(storageRoot, 'uploads');
+fs.mkdirSync(storageRoot, { recursive: true });
 const database = new Database(path.join(storageRoot, 'qrforge.db'));
 const lanAddress = Object.values(os.networkInterfaces())
   .flat()
@@ -62,6 +63,25 @@ app.use(session({
   }
 }));
 app.use(express.static(__dirname));
+
+app.get('/api/network', (_req, res) => {
+  const interfaces = os.networkInterfaces();
+  const addresses = [];
+  for (const [name, list] of Object.entries(interfaces)) {
+    for (const item of list || []) {
+      if (item && item.family === 'IPv4' && !item.internal) {
+        addresses.push({ name, address: item.address, url: `http://${item.address}:${port}` });
+      }
+    }
+  }
+  res.json({
+    port,
+    lanAddress,
+    defaultBaseUrl,
+    publicBaseUrl,
+    addresses
+  });
+});
 
 const publicUser = user => ({ id: user.id, name: user.name, email: user.email });
 
@@ -129,11 +149,16 @@ app.post('/api/files', upload.single('file'), (req, res) => {
     'utf8'
   );
 
+  const customBase = String(req.headers['x-custom-base-url'] || req.query.base || '').trim().replace(/\/$/, '');
+  const resolvedBase = customBase || publicBaseUrl || defaultBaseUrl || `${req.protocol}://${req.get('host')}`;
+
   res.status(201).json({
     id: metadata.id,
-    url: `${publicBaseUrl || defaultBaseUrl || `${req.protocol}://${req.get('host')}`}/api/files/${metadata.id}`,
+    url: `${resolvedBase.replace(/\/$/, '')}/api/files/${metadata.id}`,
     name: metadata.originalName,
-    size: metadata.size
+    size: metadata.size,
+    lanAddress,
+    port
   });
 });
 
@@ -166,9 +191,18 @@ app.use((error, _req, res, _next) => {
   res.status(400).json({ error: error.message || 'Upload failed.' });
 });
 
-const server = app.listen(port, () => {
-  console.log(`QRForge Pro running at http://localhost:${port}`);
-  console.log(`Maximum upload size: ${maxFileSize / 1024 / 1024} MB`);
+const server = app.listen(port, '0.0.0.0', () => {
+  console.log(`\n==========================================`);
+  console.log(`🚀 QRForge Pro Server running:`);
+  console.log(`   Local URL:   http://localhost:${port}`);
+  if (lanAddress) {
+    console.log(`   Network URL: http://${lanAddress}:${port} (For phone scanning on same Wi-Fi)`);
+  }
+  if (publicBaseUrl) {
+    console.log(`   Public URL:  ${publicBaseUrl}`);
+  }
+  console.log(`   Max upload:  ${maxFileSize / 1024 / 1024} MB`);
+  console.log(`==========================================\n`);
 });
 
 server.on('error', error => {

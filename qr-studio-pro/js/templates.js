@@ -295,25 +295,66 @@ const QRTypes = {
         <input class="form-input" id="f-app-ios" type="url" placeholder="https://apps.apple.com/app/..." oninput="QREngine.livePreview()"/>
       </div>`,
 
-    file: () => `
+    file: () => {
+      const savedCustom = localStorage.getItem('qrforge_custom_base_url') || '';
+      return `
       <div class="form-group">
-        <label class="form-label">Upload File (PDF, Image, Document)</label>
+        <label class="form-label">Upload File (PDF, Image, Document, Video)</label>
         <div class="file-drop" id="file-drop-area" onclick="document.getElementById('f-file-input').click()"
              ondragover="event.preventDefault();this.classList.add('dragging')"
              ondragleave="this.classList.remove('dragging')"
              ondrop="QRTemplates.handleFileDrop(event)">
           <div style="font-size:2.5rem">📄</div>
           <div style="font-weight:600;color:var(--text2)">Click or drag file here</div>
-          <div class="text-xs text-muted">PDF, Images, Docs — Max 500 MB (expires 60 min)</div>
-          <div class="input-hint">For phone sharing, open this app using your computer IP or a public HTTPS URL, not localhost.</div>
+          <div class="text-xs text-muted">Any file type — Up to 500 MB</div>
           <input type="file" id="f-file-input" style="display:none" onchange="QRTemplates.handleFileUpload(this)" accept="*/*"/>
         </div>
-        <div id="file-info" style="display:none;margin-top:10px;padding:10px 14px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:var(--r-sm);display:flex;align-items:center;gap:10px;font-size:0.85rem">
-          <span style="font-size:1.2rem">📎</span>
-          <span id="file-name" style="flex:1"></span>
-          <button onclick="QRTemplates.clearFile()" class="btn btn-icon btn-sm" style="color:var(--red)">✕</button>
+
+        <div id="file-info" style="display:${window._uploadedFileUrl ? 'flex' : 'none'};margin-top:12px;padding:12px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.25);border-radius:var(--r-sm);flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px;width:100%">
+            <span style="font-size:1.3rem">📎</span>
+            <span id="file-name" style="flex:1;font-weight:600;word-break:break-all">${window._uploadedFileName || ''}</span>
+            <button type="button" onclick="QRTemplates.clearFile()" class="btn btn-icon btn-sm" title="Remove file" style="color:var(--red)">✕</button>
+          </div>
+          
+          <div id="file-url-container" style="display:${window._uploadedFileUrl ? 'block' : 'none'};width:100%">
+            <label class="form-label" style="font-size:0.75rem;margin-bottom:4px;color:var(--text2)">QR Code Destination URL:</label>
+            <div style="display:flex;gap:6px">
+              <input class="form-input" id="file-url-input" readonly value="${window._uploadedFileUrl || ''}" style="font-family:var(--mono);font-size:0.78rem" />
+              <button type="button" class="btn btn-sm btn-outline" onclick="QRTemplates.copyFileUrl()">📋 Copy</button>
+              <a id="file-url-link" href="${window._uploadedFileUrl || '#'}" target="_blank" class="btn btn-sm btn-outline">↗ Test</a>
+            </div>
+          </div>
         </div>
-      </div>`,
+
+        <!-- Network / Base URL Configuration -->
+        <div style="margin-top:14px;padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--r-sm)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span style="font-size:0.8rem;font-weight:600;color:var(--text2)">📡 Sharing Host / Base URL</span>
+            <span id="network-detection-badge" class="badge" style="font-size:0.7rem;background:rgba(59,130,246,0.15);color:var(--blue)">Detecting IP...</span>
+          </div>
+          <div style="display:flex;gap:6px">
+            <input class="form-input" id="f-file-custom-host" placeholder="http://192.168.x.x:8080 or tunnel URL" value="${savedCustom}" style="font-family:var(--mono);font-size:0.8rem" />
+            <button type="button" class="btn btn-sm btn-outline" onclick="QRTemplates.applyCustomHost()">Apply</button>
+          </div>
+          <div class="input-hint" style="margin-top:6px;font-size:0.75rem">
+            Default uses your computer's local Wi-Fi IP. For mobile data / remote sharing, paste a tunnel link (e.g. localtunnel/ngrok).
+          </div>
+        </div>
+
+        <!-- Phone Connection Helper & Troubleshooting -->
+        <div style="margin-top:14px;padding:12px 14px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:var(--r-sm);font-size:0.82rem">
+          <div style="font-weight:600;color:#f59e0b;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+            <span>⚠️ Phone says "Service can't be reached"?</span>
+          </div>
+          <div style="color:var(--text2);line-height:1.5;display:flex;flex-direction:column;gap:6px">
+            <div><strong>1. Same Wi-Fi Required:</strong> Phone must be connected to the <u>same Wi-Fi network</u> as this PC. <em>Turn off Mobile Data (4G/5G)</em> on your phone, as mobile data cannot reach local IP addresses.</div>
+            <div><strong>2. Windows Network Profile:</strong> In Windows <em>Settings &gt; Network &amp; internet &gt; Wi-Fi</em>, set network type to <strong>Private network</strong> so Windows allows incoming phone connections.</div>
+            <div><strong>3. Share across Mobile Data / Internet:</strong> Run <code>npx localtunnel --port 8080</code> in your PC terminal, copy the <code>https://...loca.lt</code> link into the Sharing Host box above, and click Apply.</div>
+          </div>
+        </div>
+      </div>`;
+    },
 
     barcode: () => `
       <div class="form-group">
@@ -545,42 +586,127 @@ const QRTypes = {
     if (!file) return;
     if (file.size > MAX_FILE_SIZE_BYTES) {
       document.getElementById('f-file-input').value = '';
-      name.textContent = `❌ File exceeds 500 MB limit`;
-      info.style.display = 'flex';
+      if (name) name.textContent = `❌ File exceeds 500 MB limit`;
+      if (info) info.style.display = 'flex';
       window._uploadedFileUrl = '';
+      window._uploadedFileId = '';
+      window._uploadedFileName = '';
       App.toast('⚠️', 'File is too large. Maximum size is 500 MB.', 'warn');
       return;
     }
 
     const sizeText = (file.size / (1024 * 1024)).toFixed(file.size > 1024 * 1024 ? 2 : 1);
-    name.textContent = `Uploading ${file.name} (${sizeText} MB)...`;
-    info.style.display = 'flex';
+    if (name) name.textContent = `Uploading ${file.name} (${sizeText} MB)...`;
+    if (info) {
+      info.style.display = 'flex';
+    }
     App.toast('⏳', 'Uploading large file for QR sharing...', 'info');
 
     try {
       const fd = new FormData();
       fd.append('file', file);
-      const res  = await fetch('/api/files', { method: 'POST', body: fd });
+
+      const customBase = (document.getElementById('f-file-custom-host')?.value || localStorage.getItem('qrforge_custom_base_url') || '').trim().replace(/\/$/, '');
+      const headers = {};
+      if (customBase) {
+        headers['x-custom-base-url'] = customBase;
+      }
+
+      const res  = await fetch('/api/files', { method: 'POST', body: fd, headers });
       const data = await res.json();
       if (res.ok && data.url) {
         window._uploadedFileUrl = data.url;
-        name.textContent = `✅ ${file.name} (${sizeText} MB)`;
+        window._uploadedFileId = data.id;
+        window._uploadedFileName = `${file.name} (${sizeText} MB)`;
+        if (name) name.textContent = `✅ ${window._uploadedFileName}`;
+        
+        const urlContainer = document.getElementById('file-url-container');
+        const urlInput = document.getElementById('file-url-input');
+        const urlLink = document.getElementById('file-url-link');
+        if (urlContainer) urlContainer.style.display = 'block';
+        if (urlInput) urlInput.value = data.url;
+        if (urlLink) urlLink.href = data.url;
+
         App.toast('✅', 'Large file uploaded and ready to share.', 'success');
         QREngine.livePreview();
       } else {
         throw new Error(data.error || 'Upload failed');
       }
     } catch {
-      name.textContent = `❌ Upload failed. Try again.`;
+      if (name) name.textContent = `❌ Upload failed. Try again.`;
       window._uploadedFileUrl = '';
+      window._uploadedFileId = '';
+      window._uploadedFileName = '';
       App.toast('❌', 'Upload failed. Check the file or try a smaller file.', 'error');
     }
   },
 
+  async copyFileUrl() {
+    const input = document.getElementById('file-url-input');
+    if (!input || !input.value) return;
+    try {
+      await navigator.clipboard.writeText(input.value);
+      App.toast('📋', 'Download URL copied to clipboard!', 'success');
+    } catch {
+      input.select();
+      document.execCommand('copy');
+      App.toast('📋', 'Download URL copied!', 'success');
+    }
+  },
+
+  applyCustomHost() {
+    const val = (document.getElementById('f-file-custom-host')?.value || '').trim().replace(/\/$/, '');
+    if (val) {
+      localStorage.setItem('qrforge_custom_base_url', val);
+      App.toast('✅', `Custom Base URL applied: ${val}`, 'success');
+    } else {
+      localStorage.removeItem('qrforge_custom_base_url');
+      App.toast('ℹ️', 'Reset to automatic network IP', 'info');
+    }
+
+    if (window._uploadedFileId) {
+      const base = val || window._detectedLanUrl || window.location.origin;
+      window._uploadedFileUrl = `${base}/api/files/${window._uploadedFileId}`;
+      const urlInput = document.getElementById('file-url-input');
+      const urlLink = document.getElementById('file-url-link');
+      if (urlInput) urlInput.value = window._uploadedFileUrl;
+      if (urlLink) urlLink.href = window._uploadedFileUrl;
+      QREngine.livePreview();
+    }
+  },
+
+  async detectNetwork() {
+    try {
+      const res = await fetch('/api/network');
+      if (!res.ok) return;
+      const data = await res.json();
+      const badge = document.getElementById('network-detection-badge');
+      const hostInput = document.getElementById('f-file-custom-host');
+      if (data.lanAddress) {
+        window._detectedLanUrl = `http://${data.lanAddress}:${data.port || 8080}`;
+        if (badge) {
+          badge.textContent = `LAN: ${data.lanAddress}`;
+          badge.title = `Your PC's IP on Wi-Fi: ${data.lanAddress}`;
+        }
+        if (hostInput && !hostInput.value) {
+          hostInput.placeholder = window._detectedLanUrl;
+        }
+      } else if (badge) {
+        badge.textContent = `Port ${data.port || 8080}`;
+      }
+    } catch {
+      // ignore network detection error
+    }
+  },
+
   clearFile() {
-    document.getElementById('f-file-input').value = '';
-    document.getElementById('file-info').style.display = 'none';
+    const input = document.getElementById('f-file-input');
+    if (input) input.value = '';
+    const info = document.getElementById('file-info');
+    if (info) info.style.display = 'none';
     window._uploadedFileUrl = '';
+    window._uploadedFileId = '';
+    window._uploadedFileName = '';
     QREngine.livePreview();
   }
 };
